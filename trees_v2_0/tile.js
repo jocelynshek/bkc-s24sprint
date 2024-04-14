@@ -2,9 +2,10 @@ let designTiles = false;
 let tiles = [];
 
 class Tile {
-  constructor(points, id) {
+  constructor(points, id, hasStory) {
     this.ps = points;
     this.perimeter = 0;
+    this.hasStory = hasStory;
     for (let i = 0; i < this.ps.length; i++) {
       let i1 = i;
       let i2 = (i+1)%this.ps.length;
@@ -14,21 +15,33 @@ class Tile {
       this.perimeter += dist(p1.x, p1.y, p2.x, p2.y);
     }
     this.id = id;
-    this.c = color(0, 0, 0);
+    this.name = findName(id);
+    if (this.name) {
+      // ID-associated image
+      this.image = loadImage('assets/map/' + this.name + '.PNG');
+      if (this.hasStory) {
+        this.imageComplete = loadImage('assets/map/' + this.name + '_CompletionTree.PNG');
+      }
+    }
+    else {
+      this.image = 0;
+    }
+    this.complete = false;
     
     // Idle animation parameters
     this.a = 0;
+    this.idleTimer = 0;
     this.posR = 0;
-    this.speedR = 20;
+    this.speedR = 3;
     
-    
+    // Interaction booleans
     this.hovering = false;
     this.timeout = false;
     this.clicked = false;
     this.selected = false;
     this.justClicked = false;
     
-    this.image = 0;
+    
     
     // Elevation parameters
     this.shift = 0;
@@ -40,8 +53,8 @@ class Tile {
     fill(20);
     strokeWeight(2);
     beginShape();
-    for (let point of this.ps) {
-      vertex(point.x, point.y);
+    for (let p of this.ps) {
+      vertex(p.x, p.y);
     }
     endShape(CLOSE);
     noStroke();
@@ -50,8 +63,8 @@ class Tile {
       translate(0, -i);
       fill(57, 53, 58);
       beginShape();
-      for (let point of this.ps) {
-        vertex(point.x, point.y);
+      for (let p of this.ps) {
+        vertex(p.x, p.y);
       }
       endShape(CLOSE);
       pop();
@@ -62,98 +75,135 @@ class Tile {
   showTile() {
       stroke(0);
       fill(227, 223, 228);
+      if (this.hasStory) {fill(254, 249, 253);}
+      else {fill(240, 235, 225);}
       strokeWeight(4);
       beginShape();
       for (let i = 0; i < this.ps.length; i++) {
-        point = this.ps[i];
-        vertex(point.x, point.y);
+        let p = this.ps[i];
+        vertex(p.x, p.y);
       }
-      endShape(CLOSE);
-      
-      noFill();
-      strokeWeight(3);
+      endShape(CLOSE);  
+  }
+  
+  showIdle() {
+    if (this.idleTimer < fr) {
+      stroke(255, 0, 0, 180);
+      strokeWeight(8);
       let iMax = this.ps.length;
+      let loc = this.posR;
       for (let i = 0; i < iMax; i++) {
         let i1 = i;
         let i2 = (i+1) % iMax;
-        if ((i+1)/(iMax+1) < this.a) { 
-          stroke(255, 0, 0, 200);
+        let d = dist(this.ps[i1].x, this.ps[i1].y, this.ps[i2].x, this.ps[i2].y);
+        if (d < loc) {
+          loc -= d;
+          line(this.ps[i].x, this.ps[i].y, this.ps[i2].x, this.ps[i2].y);
         }
         else {
-           stroke(0);
+          let ratio = loc/d;
+          let xR = (1-ratio)*this.ps[i1].x + (ratio)*this.ps[i2].x;
+          let yR = (1-ratio)*this.ps[i1].y + (ratio)*this.ps[i2].y;
+          line(this.ps[i].x, this.ps[i].y, xR, yR);
+          break;
         }
-        line(this.ps[i].x, this.ps[i].y, this.ps[i2].x, this.ps[i2].y);
       }
       
-      // Runner animation
-      if (this.a > 0.05) {
-        noStroke();
-        
-        for (let j = 10; j >0; j-=2) {
-          let loc = this.posR + 5*j;
-          for (let i = 0; i < iMax; i++) {
-            let i1 = i;
-            let i2 = (i+1) % iMax;
-            let d = dist(this.ps[i1].x, this.ps[i1].y, this.ps[i2].x, this.ps[i2].y);
-            if (d < loc) {
-              loc -= d;
-            }
-            else {
-              let ratio = loc/d;
-              let xR = (1-ratio)*this.ps[i1].x + (ratio)*this.ps[i2].x;
-              let yR = (1-ratio)*this.ps[i1].y + (ratio)*this.ps[i2].y;
-              fill(155+10*j, 0, 0, this.a*(120+10*j));
-              circle(xR, yR, 10+j);
-              console.log(xR);
-              console.log(yR);
-              console.log('\n');
-              break;
-            }
+      this.posR += this.perimeter/fr;
+      this.posR = this.posR % this.perimeter;
+    }
+    else {
+      let alpha = 255*sin(PI*(this.idleTimer-fr)/fr);
+      stroke(255, 0, 0, alpha);
+      noFill();
+      strokeWeight(6);
+      beginShape();
+      for (let i = 0; i < this.ps.length; i++) {
+        let p = this.ps[i];
+        vertex(p.x, p.y);
+      }
+      endShape(CLOSE);
+    }
+    this.idleTimer += 1;
+  }
+  
+  showSelected() {
+    stroke(20, 150, 50);
+    noFill();
+    strokeWeight(6);
+    beginShape();
+    for (let i = 0; i < this.ps.length; i++) {
+      let p = this.ps[i];
+      vertex(p.x, p.y);
+    }
+    endShape(CLOSE);
+    
+    let iMax = this.ps.length;
+    noStroke();
+    let kMax = 5;
+    for (let k = 0; k < kMax; k++) {
+      for (let j = 10; j >5; j-=2) {
+        let loc = (this.posR + k*this.perimeter/kMax+ 5*j)%this.perimeter;
+        for (let i = 0; i < iMax; i++) {
+          let i1 = i;
+          let i2 = (i+1) % iMax;
+          let d = dist(this.ps[i1].x, this.ps[i1].y, this.ps[i2].x, this.ps[i2].y);
+          if (d < loc) {
+            loc -= d;
+          }
+          else {
+            let ratio = loc/d;
+            let xR = (1-ratio)*this.ps[i1].x + (ratio)*this.ps[i2].x;
+            let yR = (1-ratio)*this.ps[i1].y + (ratio)*this.ps[i2].y;
+            fill(20, 55+10*j, 50, (60+10*j));
+            circle(xR, yR, 4+j/2);
+            break;
           }
         }
-        
-        this.posR += this.a * this.speedR;
-        this.posR = this.posR % this.perimeter;
       }
+    }
+    
+    this.posR += this.speedR;
+    this.posR = this.posR % this.perimeter;
   }
   
   show() {
     this.checkHover();
     let maxShift = 30;
     
-    // Control Idle animation parameters
-    if (this.hovering || this.timeout) {
-      this.a = lerp(1, this.a, 0.95); 
-      this.c = lerpColor(color(190, 40, 38, 255), this.c, 0.95);
-      
-    }
-    else {
-      this.a = lerp(0, this.a, 0.95); 
-      this.c = lerpColor(color(190, 40, 38, 0), this.c, 0.95);
-    }
-    
     // Control animation parameters for a Selected tile (there can only be one)
     if (this.justClicked) {
     }
     else if (this.selected) {
-      this.shift = lerp(maxShift, this.shift, 0.95);
+      this.shift = lerp(0, this.shift, 0.95); // maxShift
     }
     else {
       this.shift = lerp(0, this.shift, 0.95);
     }
     
+    
     if (!designTiles) {
-      this.showElevation();
+      this.showElevation(); // Display tile sides if elevated
       push();
       translate(0, -this.shift);
-      this.showTile();
+      this.showTile(); // Display tile
+      if (this.selected) { // Play selected animation
+        this.showSelected();
+      }
+      else if (this.timeout) { // Play idle animation
+        this.showIdle();
+      }
+      if (this.image) {
+        image(this.image, 0, -15, wi, wh);
+        if (this.complete) {image(this.imageComplete, 0, -15, wi, wh);}
+        
+      }
       pop();
     }
     else {
-    
       push();
       
-      stroke(0);
+      stroke(70);
       fill(227, 223, 228);
       noFill();
       strokeWeight(2);
@@ -164,35 +214,40 @@ class Tile {
       endShape(CLOSE);
       
       for (let p of this.ps) {
-        fill(0);
-        circle(p.x, p.y, 5);
+        fill(70);
+        circle(p.x, p.y, 8);
       }
-   
-      stroke(this.c);
-      strokeWeight(6);
+       
+      //stroke(0);
+      //strokeWeight(6);
+      //noFill();
+      //beginShape();
+      //for (let p of this.ps) {
+      //  vertex(p.x, p.y);
+      //}
+      //endShape(CLOSE);
+          
       noFill();
-      beginShape();
-      for (let point of this.ps) {
-        vertex(point.x, point.y);
-      }
-      endShape(CLOSE);
-      
-       noFill();
-       stroke(0);
-       strokeWeight(1);
-       text(this.id, this.ps[0].x+20, this.ps[0].y+20)
+      stroke(0);
+      strokeWeight(1);
+      text(this.id, this.ps[0].x+20, this.ps[0].y+20)
       
       pop();
     }
   }
   
-  checkHover() {
-    if (this.hovering) {
-      if (!this.containsMouse()) {this.hovering=false;}
-    }
-    else {
-      if (this.containsMouse()) {this.hovering=true;}
-    }
+  checkHover() { // Obsolete function to check hovering
+    //if (this.hovering) {
+    //  if (!this.containsMouse()) {this.hovering=false;}
+    //}
+    //else {
+    //  if (this.containsMouse()) {this.hovering=true;}
+    //}
+  }
+  
+  resetIdle() { // Reset the idle animation timer
+    this.timeout=false;
+    this.idleTimer = 0;
   }
   
   containsMouse() {
@@ -211,11 +266,14 @@ class Tile {
     }
     return inside;
   }
-  
 }
 
 
 
+
+
+
+// Utility functions for tiles
 
 function deselectOthers(id) {
   for (let tile of tiles) {
@@ -224,6 +282,25 @@ function deselectOthers(id) {
     }
   }
 }
+
+function findName(id) {
+  let name = '';
+  if (id == 0) {//name='West_Roxbury';
+  }
+  else if (id == 3) {name='Backbay';}
+  else if (id == 4) {//name='Roxbury';
+  }
+  else if (id == 5) {//name='Mission_Hill';
+  }
+  else if (id == 6) {name='Jamaica_Plain';}
+  else if (id == 7) {name='Mattapan';}
+  else if (id == 9) {name='Kenmore';}
+  else if (id == 14) {name='East_Boston';}
+  
+  return name;
+}
+
+// Detail tile construction and dimension
 
 function constructTiles() {
   tiles.push(constructTile0());
@@ -236,7 +313,10 @@ function constructTiles() {
   tiles.push(constructTile6());
   tiles.push(constructTile7());
   
+  // tiles.push(constructTile8());
+  tiles.push(constructTile9());
   
+  tiles.push(constructTile14());
 }
 
 function constructTile0() {
@@ -248,7 +328,7 @@ function constructTile0() {
   points.push(createVector(0.205*wi, 0.225*wh));
   points.push(createVector(0.166*wi, 0.0*wh));
   
-  tile = new Tile(points, 0);
+  tile = new Tile(points, 0, false);
   return tile;
 }
 
@@ -263,7 +343,7 @@ function constructTile1() {
   points.push(createVector(0.153*wi, 0.708*wh));
   points.push(createVector(0*wi, 0.767*wh));
   
-  tile = new Tile(points, 1);
+  tile = new Tile(points, 1, false);
   return tile;
 }
 
@@ -277,7 +357,7 @@ function constructTile2() {
   points.push(createVector(0.265*wi, 1.00*wh));
   points.push(createVector(0*wi, 1.0*wh));
   
-  tile = new Tile(points, 2);
+  tile = new Tile(points, 2, false);
   return tile;
 }
 
@@ -289,7 +369,7 @@ function constructTile3() {
   points.push(createVector(0.278*wi, 0.25*wh));
   points.push(createVector(0.228*wi, 0.209*wh));
   
-  tile = new Tile(points, 3);
+  tile = new Tile(points, 3, true);
   return tile;
 }
 
@@ -303,7 +383,7 @@ function constructTile4() {
   points.push(createVector(0.259*wi, 0.463*wh));
   points.push(createVector(0.150*wi, 0.492*wh));
   
-  tile = new Tile(points, 4);
+  tile = new Tile(points, 4, false);
   return tile;
 }
 
@@ -316,7 +396,7 @@ function constructTile5() {
   points.push(createVector(0.193*wi, 0.678*wh));
   points.push(createVector(0.144*wi, 0.593*wh));
   
-  tile = new Tile(points, 5);
+  tile = new Tile(points, 5, false);
   return tile;
 }
 
@@ -330,7 +410,7 @@ function constructTile6() {
   points.push(createVector(0.262*wi, 0.785*wh));
   points.push(createVector(0.185*wi, 0.788*wh));
   
-  tile = new Tile(points, 6);
+  tile = new Tile(points, 6, true);
   return tile;
 }
 
@@ -345,6 +425,77 @@ function constructTile7() {
   points.push(createVector(0.297*wi, 1*wh));
   
   
-  tile = new Tile(points, 7);
+  tile = new Tile(points, 7, true);
+  return tile;
+}
+
+function constructTile8() {
+  let points = [];
+  points.push(createVector(0.295*wi, 0.288*wh));
+  points.push(createVector(0.582*wi, 0.205*wh));
+  points.push(createVector(0.482*wi, 0.305*wh));
+  
+  tile = new Tile(points, 8, false);
+  return tile;
+}
+
+function constructTile9() {
+  let points = [];
+  points.push(createVector(0.388*wi, 0.481*wh));
+  points.push(createVector(0.437*wi, 0.457*wh));
+  points.push(createVector(0.496*wi, 0.496*wh));
+  points.push(createVector(0.501*wi, 0.626*wh));
+  points.push(createVector(0.515*wi, 0.655*wh));
+  points.push(createVector(0.484*wi, 0.700*wh));
+  points.push(createVector(0.349*wi, 0.547*wh));
+  
+  tile = new Tile(points, 9, true);
+  return tile;
+}
+
+function constructTile14() {
+  let points = [];
+  points.push(createVector(0.584*wi, 0.00*wh));
+  points.push(createVector(0.848*wi, 0.00*wh));
+  points.push(createVector(0.846*wi, 0.046*wh));
+  points.push(createVector(0.863*wi, 0.050*wh));
+  points.push(createVector(0.859*wi, 0.089*wh));
+  points.push(createVector(0.849*wi, 0.094*wh));
+  points.push(createVector(0.849*wi, 0.115*wh));
+  points.push(createVector(0.838*wi, 0.121*wh));
+  points.push(createVector(0.827*wi, 0.087*wh));
+  points.push(createVector(0.809*wi, 0.095*wh));
+  points.push(createVector(0.806*wi, 0.113*wh));
+  points.push(createVector(0.790*wi, 0.129*wh));
+  points.push(createVector(0.801*wi, 0.156*wh));
+  points.push(createVector(0.820*wi, 0.125*wh));
+  points.push(createVector(0.832*wi, 0.137*wh));
+  points.push(createVector(0.826*wi, 0.191*wh));
+  points.push(createVector(0.836*wi, 0.196*wh));
+  points.push(createVector(0.845*wi, 0.219*wh));
+  points.push(createVector(0.860*wi, 0.205*wh));
+  points.push(createVector(0.860*wi, 0.255*wh));
+  points.push(createVector(0.851*wi, 0.265*wh));
+  points.push(createVector(0.837*wi, 0.247*wh));
+  points.push(createVector(0.828*wi, 0.251*wh));
+  points.push(createVector(0.821*wi, 0.305*wh));
+  points.push(createVector(0.756*wi, 0.307*wh));
+  points.push(createVector(0.703*wi, 0.238*wh));
+  points.push(createVector(0.706*wi, 0.217*wh));
+  points.push(createVector(0.701*wi, 0.206*wh));
+  points.push(createVector(0.690*wi, 0.230*wh));
+  points.push(createVector(0.674*wi, 0.218*wh));
+  points.push(createVector(0.660*wi, 0.166*wh));
+  points.push(createVector(0.668*wi, 0.157*wh));
+  points.push(createVector(0.666*wi, 0.118*wh));
+  points.push(createVector(0.688*wi, 0.095*wh));
+  points.push(createVector(0.698*wi, 0.104*wh));
+  points.push(createVector(0.723*wi, 0.068*wh));
+  points.push(createVector(0.726*wi, 0.036*wh));
+  points.push(createVector(0.717*wi, 0.026*wh));
+  points.push(createVector(0.699*wi, 0.055*wh));
+  points.push(createVector(0.623*wi, 0.066*wh));
+  
+  tile = new Tile(points, 14, true);
   return tile;
 }
