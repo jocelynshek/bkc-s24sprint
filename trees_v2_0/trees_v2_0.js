@@ -5,7 +5,7 @@ let hoverIndex = 0;
 let hoverTimer = 0;
 let fReg, fBold;
 
-let ibg;
+let ibg, iInstruction;
 let iWater;
 
 let wi, wh;
@@ -13,12 +13,15 @@ let scaleFactor;
 let images = [];
 let iBuildings = [];
 
+let instructed = false; // Parameter to indicate if the user has read the instructions
+
 let fr = 60;
 
 function preload() {
   // Preload images
   ibg = loadImage('assets/map/BaseMap.PNG');
   iWater = loadImage('assets/map/Water.PNG');
+  iInstruction = loadImage('assets/map/Instruction.png');
   images.push(loadImage('assets/map/Location_Tags.PNG'));
   
   // Preload building images
@@ -36,8 +39,8 @@ function preload() {
   iBuildings.push(loadImage('assets/map/Hyde_Park.PNG'))
   
   // Preload fonts
-  fReg = loadFont('assets/fonts/MDSystemTrial-Regular.otf');
-  fBold = loadFont('assets/fonts/MDSystemTrial-Bold.otf');
+  fReg = loadFont('assets/fonts/OpenSans-Regular.ttf');
+  fBold = loadFont('assets/fonts/OpenSans-Bold.ttf');
 }
 
 function setup() {
@@ -59,6 +62,14 @@ function draw() {
   tiles.map(t => t.show());
   drawBuildings();
   drawTags();
+  
+  if (!instructed) {
+    fill(0, 100);
+    rect(0, 0, width, height);
+    let iiw = 0.6*width;
+    let iih = iiw/iInstruction.width*iInstruction.height;
+    image(iInstruction, width/2-iiw/2, height/2-iih/2, iiw, iih);
+  }
   
   sidebar.show();
   
@@ -136,6 +147,11 @@ function handleHover() {
 let yClick = 0;
 
 function mousePressed() {
+  // Handle instructions page
+  if (!instructed) {
+    instructed = true;
+    return;
+  }
   // Handle interactions with sidebar clicks
   if (sidebar.containsMouse()) {
     if (sidebar.mouseOnX()) {
@@ -162,14 +178,13 @@ function mousePressed() {
       
       // Toggle the tile and confirm that it has been Clicked
       tile.justClicked = true;
+      tile.selected = 1 - tile.selected;
       tile.clicked = true;
       tile.complete = true;
       yClick = mouseY;
       deselectOthers(tile.id);
     }
   }
-  
-  // Handle interactions with sidebar clicks
 }
 
 function mouseDragged() {
@@ -183,7 +198,6 @@ function mouseDragged() {
 function mouseReleased() {
   for (let tile of tiles) {
     if (tile.justClicked) {
-      tile.selected = 1 - tile.selected;
       tile.justClicked = false;
       hoverTimer = 0;
     }

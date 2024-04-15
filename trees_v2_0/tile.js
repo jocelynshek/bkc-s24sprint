@@ -129,7 +129,8 @@ class Tile {
   
   showSelected() {
     stroke(20, 150, 50);
-    noFill();
+    noStroke();
+    fill(170, 190, 66);
     strokeWeight(6);
     beginShape();
     for (let i = 0; i < this.ps.length; i++) {
@@ -138,33 +139,33 @@ class Tile {
     }
     endShape(CLOSE);
     
-    let iMax = this.ps.length;
-    noStroke();
-    let kMax = 5;
-    for (let k = 0; k < kMax; k++) {
-      for (let j = 10; j >5; j-=2) {
-        let loc = (this.posR + k*this.perimeter/kMax+ 5*j)%this.perimeter;
-        for (let i = 0; i < iMax; i++) {
-          let i1 = i;
-          let i2 = (i+1) % iMax;
-          let d = dist(this.ps[i1].x, this.ps[i1].y, this.ps[i2].x, this.ps[i2].y);
-          if (d < loc) {
-            loc -= d;
-          }
-          else {
-            let ratio = loc/d;
-            let xR = (1-ratio)*this.ps[i1].x + (ratio)*this.ps[i2].x;
-            let yR = (1-ratio)*this.ps[i1].y + (ratio)*this.ps[i2].y;
-            fill(20, 55+10*j, 50, (60+10*j));
-            circle(xR, yR, 4+j/2);
-            break;
-          }
-        }
-      }
-    }
+    //let iMax = this.ps.length;
+    //noStroke();
+    //let kMax = 5;
+    //for (let k = 0; k < kMax; k++) {
+    //  for (let j = 10; j >5; j-=2) {
+    //    let loc = (this.posR + k*this.perimeter/kMax+ 5*j)%this.perimeter;
+    //    for (let i = 0; i < iMax; i++) {
+    //      let i1 = i;
+    //      let i2 = (i+1) % iMax;
+    //      let d = dist(this.ps[i1].x, this.ps[i1].y, this.ps[i2].x, this.ps[i2].y);
+    //      if (d < loc) {
+    //        loc -= d;
+    //      }
+    //      else {
+    //        let ratio = loc/d;
+    //        let xR = (1-ratio)*this.ps[i1].x + (ratio)*this.ps[i2].x;
+    //        let yR = (1-ratio)*this.ps[i1].y + (ratio)*this.ps[i2].y;
+    //        fill(20, 55+10*j, 50, (60+10*j));
+    //        circle(xR, yR, 4+j/2);
+    //        break;
+    //      }
+    //    }
+    //  }
+    //}
     
-    this.posR += this.speedR;
-    this.posR = this.posR % this.perimeter;
+    //this.posR += this.speedR;
+    //this.posR = this.posR % this.perimeter;
   }
   
   show() {
