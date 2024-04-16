@@ -31,6 +31,7 @@ class Tile {
     // Idle animation parameters
     this.a = 0;
     this.idleTimer = 0;
+    this.justTimer = 0;
     this.posR = 0;
     this.speedR = 3;
     
@@ -127,6 +128,19 @@ class Tile {
     this.idleTimer += 1;
   }
   
+  showJustClicked() {
+    stroke(20, 155+this.justTimer/2, 50, 150 + this.justTimer);
+    fill(80, 155+this.justTimer/2, 50, 50 + constrain(this.justTimer, 0, 150));
+    strokeWeight(6);
+    beginShape();
+    for (let i = 0; i < this.ps.length; i++) {
+      let p = this.ps[i];
+      vertex(p.x, p.y);
+    }
+    endShape(CLOSE);
+    this.justTimer += 1;
+  }
+  
   showSelected() {
     stroke(20, 150, 50);
     noStroke();
@@ -188,10 +202,14 @@ class Tile {
       push();
       translate(0, -this.shift);
       this.showTile(); // Display tile
+      
+      if (this.justClicked) {
+        this.showJustClicked();
+      }
       if (this.selected) { // Play selected animation
         this.showSelected();
       }
-      else if (this.timeout) { // Play idle animation
+      else if (this.timeout && !this.justClicked) { // Play idle animation
         this.showIdle();
       }
       if (this.image) {

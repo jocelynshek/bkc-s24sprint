@@ -22,11 +22,13 @@ class Sidebar {
     this.slides14 = constructStory14();
     
     this.slideIndex = 0;
+    this.slidePos = 0;
   }
   
   show() {
     if (this.on) {
       this.pos.x = lerp(this.pos.x, wi-this.w, 0.1);
+      this.slidePos = lerp(this.slidePos, -this.slideIndex, 0.05);
     }
     else {
       this.pos.x = lerp(this.pos.x, wi+this.wShadow, 0.1);
@@ -77,7 +79,26 @@ class Sidebar {
         slides = this.slides14; break;
     }
     if (this.slideIndex > 0 && slides) {
-      if (this.slideIndex < slides.length+1) {slides[this.slideIndex-1].show();}
+      if (this.slideIndex < slides.length+1) {
+        this.handleSlides(slides);
+      }
+    }
+    pop();
+  }
+  
+  handleSlides(slides) {
+    push();
+    //let si = this.slideIndex-1;
+    //for (let i = -1; i <= 1; i++) {
+    //  if (si+i >= 0 && si+i < slides.length) {
+    //    translate(0, i*this.h/2);
+    //    slides[si+i].show();
+    //  }
+    //}
+    for (let i = 0; i < slides.length; i++) {
+      translate(0, 1.2*(this.slidePos+1+i)*(this.h/2));
+      slides[i].show();
+      translate(0, -1.2*(this.slidePos+1+i)*(this.h/2));
     }
     pop();
   }

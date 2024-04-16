@@ -58,7 +58,8 @@ function setup() {
 
 function draw() {
   drawBackground();
-
+  
+  
   tiles.map(t => t.show());
   drawBuildings();
   drawTags();
@@ -144,6 +145,7 @@ function handleHover() {
 
 
 
+let xClick = 0;
 let yClick = 0;
 
 function mousePressed() {
@@ -178,9 +180,9 @@ function mousePressed() {
       
       // Toggle the tile and confirm that it has been Clicked
       tile.justClicked = true;
-      tile.selected = 1 - tile.selected;
       tile.clicked = true;
       tile.complete = true;
+      xClick = mouseX;
       yClick = mouseY;
       deselectOthers(tile.id);
     }
@@ -199,6 +201,11 @@ function mouseReleased() {
   for (let tile of tiles) {
     if (tile.justClicked) {
       tile.justClicked = false;
+      tile.justTimer = 0;
+      tile.selected = 1 - tile.selected;
+      noFill();
+      stroke(0, 200, 0);
+      circle(xClick, yClick, 100);
       hoverTimer = 0;
     }
   }
