@@ -163,7 +163,9 @@ function mousePressed() {
       }
     }
     else {
-      sidebar.slideIndex += 1;
+      sidebar.justClicked=true;
+      xClick = mouseX;
+      yClick = mouseY;
     }
     return;
   }
@@ -182,6 +184,8 @@ function mousePressed() {
       tile.justClicked = true;
       tile.clicked = true;
       tile.complete = true;
+      sidebar.slidePos=0;
+      sidebar.slideIndex=0;
       xClick = mouseX;
       yClick = mouseY;
       deselectOthers(tile.id);
@@ -190,14 +194,26 @@ function mousePressed() {
 }
 
 function mouseDragged() {
+  if (sidebar.justClicked) {
+    sidebar.slidePos = lerp(sidebar.slidePos, -sidebar.slideIndex + constrain(0.001*(mouseY-yClick), -100, 100), 0.1);
+    return;
+  }
+  
   for (let tile of tiles) {
     if (tile.justClicked) {
       tile.shift = lerp(tile.maxShift*constrain((yClick-mouseY)/100, 0, 1), tile.shift, 0.95);
+      return;
     }
   }
 }
 
 function mouseReleased() {
+  if (sidebar.justClicked) {
+    sidebar.justClicked = false;
+    if (mouseY > yClick && sidebar.slideIndex > 0) {sidebar.slideIndex -= 1;}
+    else {sidebar.slideIndex += 1;}
+    return;
+  }
   for (let tile of tiles) {
     if (tile.justClicked) {
       tile.justClicked = false;

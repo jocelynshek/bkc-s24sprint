@@ -23,12 +23,16 @@ class Sidebar {
     
     this.slideIndex = 0;
     this.slidePos = 0;
+    
+    this.justClicked = false;
   }
   
   show() {
     if (this.on) {
       this.pos.x = lerp(this.pos.x, wi-this.w, 0.1);
-      this.slidePos = lerp(this.slidePos, -this.slideIndex, 0.05);
+      if (!this.justClicked) {
+        this.slidePos = lerp(this.slidePos, -this.slideIndex, 0.05);
+      }
     }
     else {
       this.pos.x = lerp(this.pos.x, wi+this.wShadow, 0.1);
@@ -40,11 +44,25 @@ class Sidebar {
     
     push();
     translate(this.pos.x, this.pos.y);
-    fill(250, 250);
+    fill(250, 255);
     noStroke();
     rect(0, 0, this.w, this.h);
-    this.showShadow();
-    // this.showStory3();
+    
+    let t_st = ['a', 'b'];
+    switch (this.id) {
+      case 3:
+        t_st=['Growing Together', 'Two elm trees, planted in the Boston Common by John Hancock, tell a story of 244 years of progress.']; break;
+      case 6:
+        t_st=['The Power of Petition', 'This tree shows us the power each of us has in shaping our environment.']; break;
+      case 7:
+        t_st=['Finding Purpose', 'This tree saw a forgotten piece land transform into a community garden.']; break;
+      case 9:
+        t_st=['Keeping It Green', 'From the Green Line to a park, these trees have seen a lot in their lifetime.']; break;
+      case 14:
+        t_st=['Seeds of Change', 'East Boston has the fewest trees of any neighborhood. Bostonians are coming together to change that.']; break;
+    }
+    
+    
     switch (this.id) {
       case 3:
         this.showStory3(); break;
@@ -58,6 +76,8 @@ class Sidebar {
         this.showStory14(); break;
     }
     this.showSlides();
+    this.showTitle(t_st[0], t_st[1]);
+    this.showShadow();
     this.showX();
     pop();
   }
@@ -78,29 +98,95 @@ class Sidebar {
       case 14:
         slides = this.slides14; break;
     }
-    if (this.slideIndex > 0 && slides) {
-      if (this.slideIndex < slides.length+1) {
-        this.handleSlides(slides);
-      }
+    if (slides) {
+       this.handleSlides(slides);
     }
     pop();
   }
   
   handleSlides(slides) {
     push();
-    //let si = this.slideIndex-1;
-    //for (let i = -1; i <= 1; i++) {
-    //  if (si+i >= 0 && si+i < slides.length) {
-    //    translate(0, i*this.h/2);
-    //    slides[si+i].show();
-    //  }
-    //}
     for (let i = 0; i < slides.length; i++) {
       translate(0, 1.2*(this.slidePos+1+i)*(this.h/2));
       slides[i].show();
       translate(0, -1.2*(this.slidePos+1+i)*(this.h/2));
     }
     pop();
+  }
+  
+  showTitle(title, subtitle) {
+    let hS = 55;
+    let wS = 0.9*this.w/4
+    
+    fill(250, 255);
+    noStroke();
+    rect(0, 0, this.w, this.h/5+2.5*hS+20);
+    let tHeight = 1;
+    for (let i = 0; i < 20; i++) {
+      fill(250, 230-i*10);
+      rect(0, this.h/5+2.5*hS+20+i*tHeight, this.w, tHeight);
+    }
+    // Show title
+    textAlign(CENTER, CENTER);
+    textSize(52);
+    textFont('Times New Roman');
+    noStroke();
+    fill(0);
+    text(title, this.w/2, this.h/5);
+    
+    
+    noFill();
+    
+    stroke(190);
+    strokeWeight(3);
+    line(this.w/2-wS, this.h/5-hS, this.w/2+wS, this.h/5-hS);
+    line(this.w/2-wS, this.h/5+hS, this.w/2+wS, this.h/5+hS);
+    
+    
+    // Show subtitle
+    textFont(fReg);
+    textSize(18);
+    textAlign(CENTER, BASELINE);
+    textWrap(WORD);
+    noStroke();
+    fill(0);
+    text(subtitle, 
+    this.w/2-1.5*wS, this.h/5+2*hS, 3*wS, 200);
+  }
+  
+  showStory3() {
+    let im = this.i3;
+    let h = 1.4*this.h/2
+    let w = h/im.height * im.width;
+    image(im, (this.w-w)/2, this.h-h, w, h);
+  }
+  
+  showStory6() {
+    let im = this.i6;
+    let h = 1.3*this.h/2
+    let w = h/im.height * im.width;
+    image(im, (this.w-w)/2, this.h-h, w, h);
+  }
+  
+  showStory7() {
+    let im = this.i7;
+    let h = 1.4*this.h/2
+    let w = h/im.height * im.width;
+    image(im, (this.w-w)/2, this.h-h, w, h);
+  }
+  
+  showStory9() {
+    let im = this.i9;
+    let h = 1.4*this.h/2
+    let w = h/im.height * im.width;
+    image(im, (this.w-w)/2, this.h-h, w, h);
+  }
+  
+  showStory14() {
+    let im = this.i14;
+    let h = 1.3*this.h/2
+    let w = h/im.height * im.width;
+    image(im, (this.w-w)/2, this.h-h, w, h);
   }
   
   showX() {
@@ -113,175 +199,6 @@ class Sidebar {
     line(b, b, b+wx, b+wx);
     line(b+wx, b, b, b+wx);
   }
-  
-  
-  showStory3() {
-    // Show title
-    textAlign(CENTER, CENTER);
-    textSize(52);
-    textFont('Times New Roman');
-    noStroke();
-    fill(0);
-    text('Growing Together', this.w/2, this.h/5);
-    
-    
-    noFill();
-    let hS = 55;
-    let wS = 0.9*this.w/4
-    stroke(190);
-    strokeWeight(3);
-    line(this.w/2-wS, this.h/5-hS, this.w/2+wS, this.h/5-hS);
-    line(this.w/2-wS, this.h/5+hS, this.w/2+wS, this.h/5+hS);
-    
-    
-    // Show subtitle
-    textFont(fReg);
-    textSize(18);
-    textAlign(CENTER, BASELINE);
-    textWrap(WORD);
-    noStroke();
-    fill(0);
-    text('Two elm trees, planted in the Boston Common by John Hancock, tell a story of 244 years of progress.', 
-    this.w/2-1.5*wS, this.h/5+2*hS, 3*wS, 200);
-    
-    let im = this.i3;
-    let h = 1.4*this.h/2
-    let w = h/im.height * im.width;
-    image(im, (this.w-w)/2, this.h-h, w, h);
-  }
-  
-  showStory6() {
-    // Show title
-    textAlign(CENTER, CENTER);
-    textSize(52);
-    textFont(fReg);
-    noStroke();
-    fill(0);
-    text('The Power of Petition', this.w/2, this.h/5);
-    
-    noFill();
-    let hS = 55;
-    let wS = 0.9*this.w/4
-    stroke(190);
-    strokeWeight(3);
-    line(this.w/2-wS, this.h/5-hS, this.w/2+wS, this.h/5-hS);
-    line(this.w/2-wS, this.h/5+hS, this.w/2+wS, this.h/5+hS);
-    
-    
-    // Show subtitle
-    textSize(18);
-    textAlign(CENTER, BASELINE);
-    textWrap(WORD);
-    noStroke();
-    fill(0);
-    text('This tree shows us the power each of us has in shaping our environment.', 
-    this.w/2-1.5*wS, this.h/5+2*hS, 3*wS, 200);
-    
-    let im = this.i6;
-    let h = 1.3*this.h/2
-    let w = h/im.height * im.width;
-    image(im, (this.w-w)/2, this.h-h, w, h);
-  }
-  
-  showStory7() {
-    // Show title
-    textAlign(CENTER, CENTER);
-    textSize(52);
-    textFont(fReg);
-    noStroke();
-    fill(0);
-    text('Finding Purpose', this.w/2, this.h/5);
-    
-    noFill();
-    let hS = 55;
-    let wS = 0.9*this.w/4
-    stroke(190);
-    strokeWeight(3);
-    line(this.w/2-wS, this.h/5-hS, this.w/2+wS, this.h/5-hS);
-    line(this.w/2-wS, this.h/5+hS, this.w/2+wS, this.h/5+hS);
-    
-    
-    // Show subtitle
-    textSize(18);
-    textAlign(CENTER, BASELINE);
-    textWrap(WORD);
-    noStroke();
-    fill(0);
-    text('This tree saw a forgotten piece land transform into a community garden.', 
-    this.w/2-1.5*wS, this.h/5+2*hS, 3*wS, 200);
-    
-    let im = this.i7;
-    let h = 1.4*this.h/2
-    let w = h/im.height * im.width;
-    image(im, (this.w-w)/2, this.h-h, w, h);
-  }
-  
-  showStory9() {
-    // Show title
-    textAlign(CENTER, CENTER);
-    textSize(52);
-    textFont(fReg);
-    noStroke();
-    fill(0);
-    text('Keeping it green', this.w/2, this.h/5);
-    
-    noFill();
-    let hS = 55;
-    let wS = 0.9*this.w/4
-    stroke(190);
-    strokeWeight(3);
-    line(this.w/2-wS, this.h/5-hS, this.w/2+wS, this.h/5-hS);
-    line(this.w/2-wS, this.h/5+hS, this.w/2+wS, this.h/5+hS);
-    
-    
-    // Show subtitle
-    textSize(18);
-    textAlign(CENTER, BASELINE);
-    textWrap(WORD);
-    noStroke();
-    fill(0);
-    text('From the Green Line to a park, these trees have seen a lot in their lifetime.', 
-    this.w/2-1.5*wS, this.h/5+2*hS, 3*wS, 200);
-    
-    let im = this.i9;
-    let h = 1.4*this.h/2
-    let w = h/im.height * im.width;
-    image(im, (this.w-w)/2, this.h-h, w, h);
-  }
-  
-  showStory14() {
-    // Show title
-    textAlign(CENTER, CENTER);
-    textSize(52);
-    textFont(fReg);
-    noStroke();
-    fill(0);
-    text('Seeds of Change', this.w/2, this.h/5);
-    
-    noFill();
-    let hS = 55;
-    let wS = 0.9*this.w/4
-    stroke(190);
-    strokeWeight(3);
-    line(this.w/2-wS, this.h/5-hS, this.w/2+wS, this.h/5-hS);
-    line(this.w/2-wS, this.h/5+hS, this.w/2+wS, this.h/5+hS);
-    
-    
-    // Show subtitle
-    textSize(18);
-    textAlign(CENTER, BASELINE);
-    textWrap(WORD);
-    noStroke();
-    fill(0);
-    text('East Boston has the fewest trees of any neighborhood. Bostonians are coming together to change that.', 
-    this.w/2-1.5*wS, this.h/5+2*hS, 3*wS, 200);
-    
-    let im = this.i14;
-    let h = 1.3*this.h/2
-    let w = h/im.height * im.width;
-    image(im, (this.w-w)/2, this.h-h, w, h);
-  }
-  
   
   showShadow(){
     push();
@@ -305,6 +222,13 @@ class Sidebar {
     return mouseX > this.pos.x && mouseX < this.pos.x + this.xSize && mouseY > 0 && mouseY < this.xSize;
   }
 }
+
+
+
+
+
+
+
 
 
 
@@ -343,13 +267,16 @@ class Slide {
   }
   
   showBacking() {
-    stroke(0);
+    for (let i = 0; i < 10; i++) {
+      fill(150, 50-2*i);
+      rect(-i/2, i/2, this.w, this.h);
+    }
     fill(255, 250);
     rect(0, 0, this.w, this.h);
   }
   
   showTitle() {
-    textFont(fBold);
+    textFont('Times New Roman');
     textSize(32);
     textAlign(LEFT, CENTER);
     fill(0);
@@ -389,7 +316,15 @@ class Slide {
     noStroke();
     text(this.content, 0.08*this.w+this.imgWidth, 100, this.w-this.imgWidth-0.13*this.w, wh); // TO CHANGE: alter coordinates
   }
+  
+  showNumber() {
+  }
 }
+
+
+
+
+
 
 
 

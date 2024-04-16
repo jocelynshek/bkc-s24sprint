@@ -76,8 +76,8 @@ class Tile {
   showTile() {
       stroke(0);
       fill(227, 223, 228);
-      if (this.hasStory) {fill(254, 249, 253);}
-      else {fill(240, 235, 225);}
+      if (this.hasStory) {fill(254, 249, 253); } //fill(190, 190, 60);
+      else {fill(240, 235, 225); } // fill(170, 170, 50);
       strokeWeight(4);
       beginShape();
       for (let i = 0; i < this.ps.length; i++) {
@@ -129,8 +129,10 @@ class Tile {
   }
   
   showJustClicked() {
-    stroke(20, 155+this.justTimer/2, 50, 150 + this.justTimer);
-    fill(80, 155+this.justTimer/2, 50, 50 + constrain(this.justTimer, 0, 150));
+    //stroke(20, 155+this.justTimer/2, 50, 150 + this.justTimer);
+    //fill(80, 155+this.justTimer/2, 50, 50 + constrain(this.justTimer, 0, 150));
+    stroke(20, 180, 50, 190);
+    fill(80, 180, 50, 150);
     strokeWeight(6);
     beginShape();
     for (let i = 0; i < this.ps.length; i++) {
