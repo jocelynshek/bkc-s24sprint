@@ -77,6 +77,10 @@ function draw() {
   handleHover();
 }
 
+function preventDefaultTouch(event) {
+  event.preventDefault();
+}
+
 function drawTags() {
   images.map(i => image(i, 0, 0, wi, wh));
   drawTagRect(0.220*wi, 0.126*wh, 95, 'Elm Trees');
